@@ -104,6 +104,49 @@ function checkIfUniqueNickname(proposed_nickname, user_list){
     return true;
 }
 
+
+//adds a move to a gamestate
+function add_to_gamestate(gs, player, postition){
+    //check if the move is valid
+    if(gs[0][postition] === 0){
+        //loop from bottom up.
+        for(let i = gs.length-1; i >= 0; i--){
+            //if that position is empty, piece would fall there
+            if(gs[i][postition] === 0){
+                gs[i][postition] = player;
+                console.table(gs);
+                return gs;
+            }
+        }
+
+    //move is not valid
+    }else{
+        return gs;
+    }
+}
+
+
+//checks to see if player has won the game
+function check_for_winning_move(gs, player, lastTop, lastCol){
+    
+}
+
+function get_row(gs, index){
+    let row_string = "";
+    for(let i = 0; i<gs[index].length; i++){
+        row_string += gs[index][i].toString();
+    }
+    return row_string;
+}
+
+function get_column(gs, index){
+    let column_string = "";
+    for(let i = 0; i<gs.length; i++){
+        column_string += gs[i][index];
+    }
+    return column_string;
+}
+
 //Classes ------------------------------------------------------------------------------------------
 
 //constructor for a User object
@@ -119,6 +162,8 @@ function Game(gameID, player1ID, player2ID){
     this.gameID = gameID;
     this.player1ID = player1ID;
     this.player2ID = player2ID;
+    this.lastTop = lastTop;
+    this.lastCol = lastCol;
     this.gamestate =        [[0, 0, 0, 0, 0, 0, 0],
                             [0, 0, 0, 0, 0, 0, 0],
                             [0, 0, 0, 0, 0, 0, 0],

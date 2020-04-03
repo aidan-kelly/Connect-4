@@ -26,14 +26,6 @@ $(function(){
     socket.emit("connection_made", uid);
 
     //here we will add the client logic for the game
-
-
-
-
-
-
-
-
     display_board(gamestate);
 });
 
