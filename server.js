@@ -8,6 +8,9 @@ var io = require('socket.io')(http);
 var port = 3000;
 let user_list = new Object();
 
+var COLUMN_COUNT = 7;
+var ROW_COUNT = 6;
+
 http.listen(port, function(){
     console.log(`Listening on port ${port}.`);
 });
@@ -106,6 +109,7 @@ function checkIfUniqueNickname(proposed_nickname, user_list){
 
 
 //adds a move to a gamestate
+//would like to eventually return or set the lastRow and lastColumn of the move
 function add_to_gamestate(gs, player, postition){
     //check if the move is valid
     if(gs[0][postition] === 0){
@@ -126,9 +130,51 @@ function add_to_gamestate(gs, player, postition){
 }
 
 
-//checks to see if player has won the game
-function check_for_winning_move(gs, player, lastTop, lastCol){
-    
+//checks to see if a player has won the game
+function check_for_winning_move(gs, player){
+    //check horizontals
+    for(let i = 0; i<gs.length; i++){
+        for(let j = 0; j<(gs[i].length)-3; j++){
+            if(gs[i][j] === player && gs[i][j+1] === player && gs[i][j+2] === player && gs[i][j+3] === player){
+                console.log("Horizontal Win!");
+                return true;
+            }
+        }
+    }
+
+    //check verticals
+    for(let i = 0; i<(gs.length)-3; i++){
+        for(let j = 0; j<gs[i].length; j++){
+            console.log(`i=${i} j=${j} gs[${i}][${j}]=${gs[i][j]}`);
+            if(gs[i][j] === player && gs[i+1][j] === player && gs[i+2][j] === player && gs[i+3][j] === player){
+                console.log("Vertical Win!");
+                return true;
+            }
+        }
+    }
+
+    //check slash
+    for(let i = gs.length-1; i>=(gs.length)-3; i--){
+        for(let j = 0; j<(gs[i].length)-3; j++){
+            if(gs[i][j] === player && gs[i-1][j+1] === player && gs[i-2][j+2] === player && gs[i-3][j+3] === player){
+                console.log("Slash Win!");
+                return true;
+            }
+        }
+    }
+
+    //check backslash
+    for(let i = 0; i<(gs.length)-3; i++){
+        for(let j = 0; j<(gs[i].length)-3; j++){
+            if(gs[i][j] === player && gs[i+1][j+1] === player && gs[i+2][j+2] === player && gs[i+3][j+3] === player){
+                console.log("Backslash Win!");
+                return true;
+            }
+        }
+    }
+
+    return false;
+
 }
 
 function get_row(gs, index){
