@@ -7,10 +7,33 @@ let gamestate =     [[0, 0, 0, 0, 0, 0, 0],
                     [0, 0, 0, 0, 0, 0, 0],
                     [0, 0, 0, 0, 0, 0, 0]];
 
+//indicates if it is our turn.
+//turn = -1 when not in a game.
+//turn = 0 if opponent turn.
+//turn = 1 if our turn. 
+let turn = -1;
+let game_id = -1;
+let p1ID = -1;
+let p2ID = -1;
+
 //executes when the dom is ready
 $(function(){
     var socket = io();
     let cookies = document.cookie;
+    
+    $(".box").click(function(){
+        //returns what column was selected.
+        let column_choice = this.id.split("_")[1];
+        console.log(`You clicked on ${column_choice}.`);
+        if(turn === 1){
+            //send to server.
+            socket.emit("game_move", game_id, uid, column_choice);
+            turn = 0;
+        }else{
+            alert("Not your turn!");
+        }
+    });
+
 
     //check to see if we have a uid cookie
     let uid = getCookie("uid");
@@ -25,17 +48,59 @@ $(function(){
     //once we have created our uid, tell server.
     socket.emit("connection_made", uid);
 
-    //here we will add the client logic for the game
-    add_to_gamestate(gamestate, 1, 1);
-    add_to_gamestate(gamestate, 1, 1);
-    add_to_gamestate(gamestate, 1, 1);
-    add_to_gamestate(gamestate, 2, 2);
-    add_to_gamestate(gamestate, 1, 1);
-    add_to_gamestate(gamestate, 2, 2);
-    add_to_gamestate(gamestate, 1, 2);
-    add_to_gamestate(gamestate, 2, 5);
-    add_to_gamestate(gamestate, 2, 3);
-    display_board(gamestate);
+    socket.on("game_start", function(gid, gs, player1ID, player2ID, firstTurnID){
+        //we are in a game
+        if(player1ID === uid || player2ID === uid){
+            gamestate = gs;
+            game_id = gid;
+            if(firstTurnID === uid){
+                turn = 1;
+                $(".turn_indicator").text("It's your turn.");
+            }else{
+                turn = 0;
+                $(".turn_indicator").text("Waiting on opponent to make a move.");
+            }
+            p1ID = player1ID;
+            p2ID = player2ID;
+
+            if(p1ID === uid){
+                $(".player_indicator").text("You are player 1.");
+            }else{
+                $(".player_indicator").text("You are player 2.");
+            }
+
+            console.log("IT'S GAME TIME BB.");
+            display_board(gamestate);
+        //we are not in a game
+        }
+    });
+
+    socket.on("game_update", function(gid, gs, playerTurn){
+        if(gid === game_id){
+            gamestate = gs;
+            display_board(gamestate, p1ID, p2ID);
+            console.table(gamestate);
+            console.log(playerTurn);
+            if(uid === playerTurn){
+                turn = 1;
+                $(".turn_indicator").text("It's your turn.");
+            }else{
+                $(".turn_indicator").text("Waiting on opponent to make a move.");
+            }
+        } 
+    });
+
+    socket.on("game_over", function(gid, winnerID, gs){
+        if(gid === game_id){
+            gamestate = gs;
+            display_board(gamestate, p1ID, p2ID);
+            if(uid === winnerID){
+                $(".game_over").text("You win!!!");
+            }else{
+                $(".game_over").text("You lose!!!");
+            }
+        }
+    });
 });
 
 //Functions ----------------------------------------------------------------------------------------
@@ -49,7 +114,6 @@ function add_to_gamestate(gs, player, postition){
             //if that position is empty, piece would fall there
             if(gs[i][postition] === 0){
                 gs[i][postition] = player;
-                console.table(gs);
                 return gs;
             }
         }
@@ -61,13 +125,13 @@ function add_to_gamestate(gs, player, postition){
 }
 
 //this function updates the divs to match the gamestate
-function display_board(gs){
+function display_board(gs, player1ID, player2ID){
     for(let i = 0; i<gs.length; i++){
         for(let j = 0; j<gs[i].length; j++){
             let div_id = i.toString() + "_" + j.toString();
-            if(gs[i][j] === 1){
+            if(gs[i][j] === player1ID){
                 $(`#${div_id}`).css("background-color","red");
-            }else if(gs[i][j] === 2){
+            }else if(gs[i][j] === player2ID){
                 $(`#${div_id}`).css("background-color","blue");
             }
         }
@@ -91,5 +155,7 @@ function getCookie(cookie_name){
       }
       return "";
 }
+
+
 
 //Classes ------------------------------------------------------------------------------------------

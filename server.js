@@ -7,6 +7,8 @@ var io = require('socket.io')(http);
 
 var port = 3000;
 let user_list = new Object();
+let game_list = new Object();
+let match_making_queue = [];
 
 var COLUMN_COUNT = 7;
 var ROW_COUNT = 6;
@@ -63,15 +65,51 @@ io.on("connection", function(socket){
             user_list[new_user.userID] = new_user;
             console.log(`A user connected. ID = ${user_list[uid].userNickname}.`);
         }
+
+        //check if we can start a game.
+        match_making_queue.push(new_user);
+        if(match_making_queue.length >= 2){
+            let p1 = match_making_queue.shift();
+            let p2 = match_making_queue.shift();
+            console.log(`We can start a match with ${p1.userNickname} and ${p2.userNickname}.`)
+            let new_game = new Game(generate_game_id(), p1.userID, p2.userID);
+            game_list[new_game.gameID] = new_game;
+            console.log(game_list);
+            console.log(user_list);
+
+            //game_start message. 
+            //gameID, gamestate, player1ID, player2ID, firstPlayerID
+            io.emit("game_start", new_game.gameID, new_game.gamestate, new_game.player1ID, new_game.player2ID, new_game.playerTurn);
+
+            
+        }
+
     });
 
     socket.on("disconnect", function(){
         console.log("User disconnected!");
         //this is where we would update their status in the users list
+
+        //NEED TO REMOVE USER FROM THE GAME QUEUE
         try{
             user_list[new_user.userID].status = false;
         }catch(err){
             console.log("Weird error from last assignment lol.")
+        }
+    });
+
+    socket.on("game_move", function(game_id, playerID, move){
+        let game = game_list[game_id];
+        add_to_gamestate(game.gamestate, playerID, move);
+        if(check_for_winning_move(game.gamestate, playerID)){
+            io.emit("game_over", game_id, playerID, game.gamestate);
+        }else{
+            if(playerID === game.player1ID){
+                game.playerTurn = game.player2ID;
+            }else{
+                game.playerTurn = game.player1ID;
+            }
+            io.emit("game_update", game_id, game.gamestate, game.playerTurn);
         }
     });
 
@@ -145,7 +183,6 @@ function check_for_winning_move(gs, player){
     //check verticals
     for(let i = 0; i<(gs.length)-3; i++){
         for(let j = 0; j<gs[i].length; j++){
-            console.log(`i=${i} j=${j} gs[${i}][${j}]=${gs[i][j]}`);
             if(gs[i][j] === player && gs[i+1][j] === player && gs[i+2][j] === player && gs[i+3][j] === player){
                 console.log("Vertical Win!");
                 return true;
@@ -177,20 +214,8 @@ function check_for_winning_move(gs, player){
 
 }
 
-function get_row(gs, index){
-    let row_string = "";
-    for(let i = 0; i<gs[index].length; i++){
-        row_string += gs[index][i].toString();
-    }
-    return row_string;
-}
-
-function get_column(gs, index){
-    let column_string = "";
-    for(let i = 0; i<gs.length; i++){
-        column_string += gs[i][index];
-    }
-    return column_string;
+function generate_game_id(){
+    return (Math.floor(Math.random() * 100000000000) + 1);
 }
 
 //Classes ------------------------------------------------------------------------------------------
@@ -208,8 +233,8 @@ function Game(gameID, player1ID, player2ID){
     this.gameID = gameID;
     this.player1ID = player1ID;
     this.player2ID = player2ID;
-    this.lastTop = lastTop;
-    this.lastCol = lastCol;
+    //for now player one always starts
+    this.playerTurn = player1ID;
     this.gamestate =        [[0, 0, 0, 0, 0, 0, 0],
                             [0, 0, 0, 0, 0, 0, 0],
                             [0, 0, 0, 0, 0, 0, 0],
