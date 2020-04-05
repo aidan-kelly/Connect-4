@@ -1,0 +1,37 @@
+html, body{
+    padding: 0;
+    margin: 0 auto;
+    height: 100%;
+    width: 100%;
+}
+
+.wrapper{
+    display: grid;
+    height: 100%;
+    grid-template-rows: 30% 35% 35%;
+    grid-template-columns: 50% 50%;
+}
+
+.title_stuff{
+    background-color: red;
+    grid-column-start: 1;
+    grid-column-end: 3;
+    height: 100%;
+}
+
+.custom_game{
+    background-color: royalblue;
+    grid-row-start: 2;
+    grid-row-end: 4;
+    height: 100%;
+}
+
+.join_custom_game{
+    background-color: seagreen;
+    height: 100%;
+}
+
+.random_game{
+    background-color: slateblue;
+    height: 100%;
+}

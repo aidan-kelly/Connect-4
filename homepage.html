@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+        <meta content="utf-8" http-equiv="encoding">
+        <title>Connect 4</title>
+        <link type="text/css" rel="stylesheet" href="home_style.css">
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans&display=swap" rel="stylesheet"> 
+        <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="client.js"></script>
+        <meta name="viewport" content="user-scalable=no" />
+    </head>
+    <body>
+        <div class="wrapper">
+
+            <div class="title_stuff">
+                <h1>Welcome to Connect 4!!</h1>
+                <div id="username_message">We created a nickname for you.</div>
+                <input id="username_entry" autocomplete="off"/>
+                <div>You can change this nickname.</div>
+            </div>
+
+
+            <div class="custom_game">
+                <div>To start a new game, give this code to your opponent:</div>
+                <div id="generated_gid">CODE GOES HERE</div>
+                <div>Tell your opponenet to visit this site and enter the code in the box to the right.</div>
+                <div>The game will start once they enter the code.</div>
+            </div>
+
+
+            <div class="join_custom_game">
+                <div>To join an existing game, enter the code they gave you below:</div>
+                <input id="gid_entry" autocomplete="off" placeholder="Game ID goes here."/>
+            </div>
+
+
+            <div class="random_game">
+                <div>To join a random game, click the button below.</div>
+                <button id="random_buttom">Random</button>
+            </div>
+        </div>
+    </body>
+</html>
