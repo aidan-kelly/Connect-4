@@ -15,6 +15,7 @@ let turn = -1;
 let game_id = -1;
 let p1ID = -1;
 let p2ID = -1;
+let valid_moves = [0,0,0,0,0,0,0];
 
 //executes when the dom is ready
 $(function(){

@@ -19,17 +19,17 @@ http.listen(port, function(){
 
 //send index.html on connection
 app.get("/", function(req, res){
-    res.sendFile(__dirname + "/index.html");
+    res.sendFile(__dirname + "/homepage.html");
 });
 
 //serve the css
-app.get('/style.css', function(req, res) {
-    res.sendFile(__dirname + "/" + "style.css");
+app.get('/home_style.css', function(req, res) {
+    res.sendFile(__dirname + "/" + "home_style.css");
 });
 
 //serve the client js
-app.get('/client.js', function(req, res) {
-    res.sendFile(__dirname + "/" + "client.js");
+app.get('/home.js', function(req, res) {
+    res.sendFile(__dirname + "/" + "home.js");
 });
 
 
@@ -37,6 +37,8 @@ app.get('/client.js', function(req, res) {
 io.on("connection", function(socket){
     console.log("User connected!");
     let new_user = new User();
+    let new_custom_game = new Game();
+    new_custom_game.gameID = generate_game_id();
 
     //my on connection code
     //client sends a uid stored as a cookie on the client.
@@ -57,6 +59,9 @@ io.on("connection", function(socket){
             //mark user as online and update online user list
             user_list[uid].status = true;
             console.log(`A user reconnected. ID = ${user_list[uid].userNickname}.`);
+            new_custom_game.player1ID = new_user.userID;
+            game_list[new_custom_game.gameID] = new_custom_game;
+            socket.emit("setup_ui", new_user.userNickname, "Welcome back", new_custom_game.gameID);
 
         //a new user
         }else{
@@ -64,25 +69,32 @@ io.on("connection", function(socket){
             new_user = new User(uid, socket.id);
             user_list[new_user.userID] = new_user;
             console.log(`A user connected. ID = ${user_list[uid].userNickname}.`);
+            new_custom_game.player1ID = new_user.userID;
+            game_list[new_custom_game.gameID] = new_custom_game;
+            socket.emit("setup_ui", new_user.userNickname, "We created a nickname for you", new_custom_game.gameID);
         }
 
         //check if we can start a game.
-        match_making_queue.push(new_user);
-        if(match_making_queue.length >= 2){
-            let p1 = match_making_queue.shift();
-            let p2 = match_making_queue.shift();
-            console.log(`We can start a match with ${p1.userNickname} and ${p2.userNickname}.`)
-            let new_game = new Game(generate_game_id(), p1.userID, p2.userID);
-            game_list[new_game.gameID] = new_game;
-            console.log(game_list);
-            console.log(user_list);
+        // match_making_queue.push(new_user);
+        // if(match_making_queue.length >= 2){
+        //     let p1 = match_making_queue.shift();
+        //     let p2 = match_making_queue.shift();
+        //     console.log(`We can start a match with ${p1.userNickname} and ${p2.userNickname}.`)
+        //     let new_game = new Game(generate_game_id(), p1.userID, p2.userID);
+        //     game_list[new_game.gameID] = new_game;
+        //     console.log(game_list);
+        //     console.log(user_list);
 
-            //game_start message. 
-            //gameID, gamestate, player1ID, player2ID, firstPlayerID
-            io.emit("game_start", new_game.gameID, new_game.gamestate, new_game.player1ID, new_game.player2ID, new_game.playerTurn);
+        //     //game_start message. 
+        //     //gameID, gamestate, player1ID, player2ID, firstPlayerID
+        //     io.emit("game_start", new_game.gameID, new_game.gamestate, new_game.player1ID, new_game.player2ID, new_game.playerTurn);
 
             
-        }
+        // }
+
+        console.table(game_list);
+
+        
 
     });
 
