@@ -315,8 +315,16 @@ function check_for_winning_move(gs, player){
         }
     }
 
-    return false;
+    for(let i = 0; i<gs.length; i++){
+        for(let j = 0; j<gs[i].length; j++){
+            if(gs[i][j] !== 0){
+                return false
+            }
+        }
+    }
 
+    console.log("We have a draw....");
+    return true;
 }
 
 function generate_game_id(){

@@ -20,18 +20,26 @@ $(function(){
     let game_id = window.localStorage.getItem("game_ID");
     let p1ID = window.localStorage.getItem("player1_ID");
     let p2ID = window.localStorage.getItem("player2_ID");
-    let valid_moves = [0,0,0,0,0,0,0];
     
     $(".box").click(function(){
         //returns what column was selected.
         let column_choice = this.id.split("_")[1];
-        console.log(`You clicked on ${column_choice}.`);
+        console.log(`You clicked on ${typeof(column_choice)}.`);
+        console.log(gamestate[0][column_choice]);
+        if(gamestate[0][column_choice] === 0){
+            console.log("Allowed move.");
+        }else{
+            alert("Not a valid move.");
+            return;
+        }
+
         if(turn === 1){
             //send to server.
             socket.emit("game_move", game_id, uid, column_choice);
             turn = 0;
         }else{
             alert("Not your turn!");
+            return;
         }
     });
 
@@ -59,7 +67,7 @@ $(function(){
     }else{
         $(".player_indicator").text("You are player 2.");
     }
-    display_board(gamestate);
+    display_board(gamestate, p1ID, p2ID);
 
     socket.on("game_update", function(gid, gs, playerTurn){
         if(gid === game_id){
@@ -121,6 +129,8 @@ function display_board(gs, player1ID, player2ID){
                 $(`#${div_id}`).css("background-color","red");
             }else if(gs[i][j] === player2ID){
                 $(`#${div_id}`).css("background-color","blue");
+            }else if(i === 0 && gs[i][j] === 0){
+                $(`#${div_id}`).css("background-color","#777");
             }
         }
     }
