@@ -5,7 +5,7 @@ $(function(){
 
     //will add user to the random game queue
     $("#random_button").click(function(){
-        console.log("YOU CLICKED THE BUTTON MY DUDE.");
+        socket.emit("random_game_request", uid);
     });
 
     //check to see if we have a uid cookie
@@ -32,6 +32,7 @@ $(function(){
     $("#username_input").submit(function(input_field){
         input_field.preventDefault();
         console.log($("#username_entry").val());
+        socket.emit("username_change_request", uid, $("#username_entry").val());
     });
 
 
@@ -39,6 +40,18 @@ $(function(){
     $("#gid_input").submit(function(input_field){
         input_field.preventDefault();
         console.log($("#gid_entry").val());
+        socket.emit("game_join_request", uid, $("#gid_entry").val());
+    });
+
+    socket.on("game_start", function(game_ID, player1_ID, player2_ID, player_turn){
+        //moves us to a new page...........................
+        if(uid === player1_ID || uid === player2_ID){
+            window.localStorage.setItem("game_ID", game_ID);
+            window.localStorage.setItem("player1_ID", player1_ID);
+            window.localStorage.setItem("player2_ID", player2_ID);
+            window.localStorage.setItem("player_turn", player_turn);
+            window.location.replace('http://localhost:3000/game_board.html');
+        }
     });
 });
 

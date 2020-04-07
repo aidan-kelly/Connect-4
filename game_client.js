@@ -1,26 +1,26 @@
-//I think this works as a 2d array
-//later on we will recieve gs from server instead of making our own here. 
-let gamestate =     [[0, 0, 0, 0, 0, 0, 0],
-                    [0, 0, 0, 0, 0, 0, 0],
-                    [0, 0, 0, 0, 0, 0, 0],
-                    [0, 0, 0, 0, 0, 0, 0],
-                    [0, 0, 0, 0, 0, 0, 0],
-                    [0, 0, 0, 0, 0, 0, 0]];
-
-//indicates if it is our turn.
-//turn = -1 when not in a game.
-//turn = 0 if opponent turn.
-//turn = 1 if our turn. 
-let turn = -1;
-let game_id = -1;
-let p1ID = -1;
-let p2ID = -1;
-let valid_moves = [0,0,0,0,0,0,0];
-
 //executes when the dom is ready
 $(function(){
     var socket = io();
     let cookies = document.cookie;
+
+    //I think this works as a 2d array
+    //later on we will recieve gs from server instead of making our own here. 
+    let gamestate =     [[0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0]];
+
+    //indicates if it is our turn.
+    //turn = -1 when not in a game.
+    //turn = 0 if opponent turn.
+    //turn = 1 if our turn. 
+    let turn = -1;
+    let game_id = window.localStorage.getItem("game_ID");
+    let p1ID = window.localStorage.getItem("player1_ID");
+    let p2ID = window.localStorage.getItem("player2_ID");
+    let valid_moves = [0,0,0,0,0,0,0];
     
     $(".box").click(function(){
         //returns what column was selected.
@@ -46,35 +46,20 @@ $(function(){
         console.log(`UID Cookie found: ${uid}.`);
     }
 
-    //once we have created our uid, tell server.
-    socket.emit("connection_made", uid);
+    if(uid === window.localStorage.getItem("player_turn")){
+        turn = 1;
+        $(".turn_indicator").text("It's your turn.");
+    }else{
+        turn = 0;
+        $(".turn_indicator").text("Waiting on opponent to make a move.");
+    }
 
-    socket.on("game_start", function(gid, gs, player1ID, player2ID, firstTurnID){
-        //we are in a game
-        if(player1ID === uid || player2ID === uid){
-            gamestate = gs;
-            game_id = gid;
-            if(firstTurnID === uid){
-                turn = 1;
-                $(".turn_indicator").text("It's your turn.");
-            }else{
-                turn = 0;
-                $(".turn_indicator").text("Waiting on opponent to make a move.");
-            }
-            p1ID = player1ID;
-            p2ID = player2ID;
-
-            if(p1ID === uid){
-                $(".player_indicator").text("You are player 1.");
-            }else{
-                $(".player_indicator").text("You are player 2.");
-            }
-
-            console.log("IT'S GAME TIME BB.");
-            display_board(gamestate);
-        //we are not in a game
-        }
-    });
+    if(p1ID === uid){
+        $(".player_indicator").text("You are player 1.");
+    }else{
+        $(".player_indicator").text("You are player 2.");
+    }
+    display_board(gamestate);
 
     socket.on("game_update", function(gid, gs, playerTurn){
         if(gid === game_id){
@@ -100,6 +85,8 @@ $(function(){
             }else{
                 $(".game_over").text("You lose!!!");
             }
+            $("#return_home").css("visibility", "visible");
+            window.localStorage.clear();
         }
     });
 });

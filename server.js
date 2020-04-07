@@ -7,7 +7,7 @@ var io = require('socket.io')(http);
 
 var port = 3000;
 let user_list = new Object();
-let game_list = new Object();
+var game_list = new Object();
 let match_making_queue = [];
 
 var COLUMN_COUNT = 7;
@@ -31,6 +31,23 @@ app.get('/home_style.css', function(req, res) {
 app.get('/home.js', function(req, res) {
     res.sendFile(__dirname + "/" + "home.js");
 });
+
+//serve the client js
+app.get('/game_board.html', function(req, res) {
+    res.sendFile(__dirname + "/" + "game_board.html");
+});
+
+//serve the client js
+app.get('/style.css', function(req, res) {
+    res.sendFile(__dirname + "/" + "style.css");
+});
+
+//serve the client js
+app.get('/game_client.js', function(req, res) {
+    res.sendFile(__dirname + "/" + "game_client.js");
+});
+
+
 
 
 //a new connection from a socket
@@ -60,6 +77,7 @@ io.on("connection", function(socket){
             user_list[uid].status = true;
             console.log(`A user reconnected. ID = ${user_list[uid].userNickname}.`);
             new_custom_game.player1ID = new_user.userID;
+            new_custom_game.playerTurn = new_user.userID;
             game_list[new_custom_game.gameID] = new_custom_game;
             socket.emit("setup_ui", new_user.userNickname, "Welcome back", new_custom_game.gameID);
 
@@ -70,6 +88,7 @@ io.on("connection", function(socket){
             user_list[new_user.userID] = new_user;
             console.log(`A user connected. ID = ${user_list[uid].userNickname}.`);
             new_custom_game.player1ID = new_user.userID;
+            new_custom_game.playerTurn = new_user.userID;
             game_list[new_custom_game.gameID] = new_custom_game;
             socket.emit("setup_ui", new_user.userNickname, "We created a nickname for you", new_custom_game.gameID);
         }
@@ -105,6 +124,14 @@ io.on("connection", function(socket){
         //NEED TO REMOVE USER FROM THE GAME QUEUE
         try{
             user_list[new_user.userID].status = false;
+
+            //when a user disconnects we remove their games. 
+            // for(let key in game_list){
+            //     if(game_list[key].player1ID === new_user.userID || game_list[key].player2ID === new_user.userID){
+            //         delete game_list[key];
+            //     }
+            // }
+
         }catch(err){
             console.log("Weird error from last assignment lol.")
         }
@@ -112,9 +139,12 @@ io.on("connection", function(socket){
 
     socket.on("game_move", function(game_id, playerID, move){
         let game = game_list[game_id];
+        console.table(game_list);
+        console.log(game);
         add_to_gamestate(game.gamestate, playerID, move);
         if(check_for_winning_move(game.gamestate, playerID)){
             io.emit("game_over", game_id, playerID, game.gamestate);
+            delete game_list[game_id];
         }else{
             if(playerID === game.player1ID){
                 game.playerTurn = game.player2ID;
@@ -126,11 +156,74 @@ io.on("connection", function(socket){
     });
 
 
+    //usernames are pretty much finished.
+    //needs some error handling. 
+    socket.on("username_change_request", function(user_id, requested_nickname){
+        let old_username = user_list[user_id].userNickname;
+        if(checkIfUniqueNickname(requested_nickname, user_list)){
+            user_list[user_id].userNickname = requested_nickname;
+            console.log(`UID = ${user_id} changed their nickname to ${requested_nickname}.`);
+        }else{
+            console.log("Error");
+        }
+    });
+
+
+    
+    socket.on("game_join_request", function(user_id, requested_gid){
+        let requested_game = game_list[requested_gid];
+        if(requested_game !== undefined){
+            console.log("The game exists.");
+            if((requested_game.player1ID === undefined && (requested_game.player2ID !== undefined && requested_game.player2ID !== user_id)) || ((requested_game.player1ID !== undefined && requested_game.player1ID !== user_id) && requested_game.player2ID === undefined)){
+                console.log("We can join.");
+
+                //add the user to the game.
+                if(requested_game.player1ID === undefined){
+                    game_list[requested_gid].player1ID = user_id;
+                    //start the game by sending out a game_start message
+                    io.emit("game_start", game_list[requested_gid].gameID, game_list[requested_gid].player1ID, game_list[requested_gid].player2ID, game_list[requested_gid].playerTurn);
+                }else{
+                    game_list[requested_gid].player2ID = user_id;
+                    //start the game by sending out a game_start message
+                    io.emit("game_start", game_list[requested_gid].gameID, game_list[requested_gid].player1ID, game_list[requested_gid].player2ID, game_list[requested_gid].playerTurn);
+                }
+            }else{
+                console.log("Error");
+            }
+        }else{
+            console.log("Error");
+        }
+    });
+
+
+    //add the user to the matchmaking queue
+    socket.on("random_game_request", function(user_id){
+        match_making_queue.push(user_list[user_id]);
+        console.log(`UID = ${user_id} has been added to the matchmaking queue.`);
+
+        //check if there is enough people in queue to start up a match
+        if(match_making_queue.length >= 2){
+            let p1 = match_making_queue.shift();
+            let p2 = match_making_queue.shift();
+            console.log(`We can start a match with ${p1.userNickname} and ${p2.userNickname}.`);
+            let new_game = new Game(generate_game_id(), p1.userID, p2.userID);
+            game_list[new_game.gameID] = new_game;
+            console.table(game_list);
+
+            //game_start message. 
+            //gameID, gamestate, player1ID, player2ID, firstPlayerID
+            io.emit("game_start", new_game.gameID, new_game.player1ID, new_game.player2ID, new_game.playerTurn);
+        }
+
+    });
+
+
 });
 
 //Functions ----------------------------------------------------------------------------------------
 
 //Returns a random username for new users
+//used a Shakespearean insult chart for the names
 function randomUsername() {
 	let parts = [];
     parts.push(["Artless","Bawdy","Beslubbering","Bootless","Churlish","Cockered","Clouted","Craven","Currish","Dankish","Dissembling","Droning","Errant","Fawning","Fobbing","Froward","Frothy","Gleeking","Goatish","Gorbellied","Impertinent","Infectious","Jarring","Loggerheaded","Lumpish","Mammering","Mangled","Mewling","Paunchy","Pribbling","Puking","Puny","Qualling","Rank","Reeky","Roguish","Ruttish","Saucy","Spleeny","Spongy","Surly","Tottering","Unmuzzled","Vain","Venomed","Villainous","Warped","Wayward","Weedy","Yeasty"]);
