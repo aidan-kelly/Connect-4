@@ -1,11 +1,11 @@
 //executes when the dom is ready
-var p1_colour = ["red", "#4ecca3", ""];
-var p2_colour = ["blue", "#ee562b", ""];
-var background_colour = ["#fff", "#232931", ""];
-var wrapper_colour = ["#fff", "#232931", ""];
-var box_colour = ["#444", "#696e76", ""];
-var valid_move_colour = ["#777", "#9ca1a9", ""];
-var font_colour = ["black", "white", ""];
+var p1_colour = ["red", "#4ecca3", "#4c586f"];
+var p2_colour = ["blue", "#ee562b", "#3e3e3b"];
+var background_colour = ["#fff", "#232931", "#a2aab0"];
+var wrapper_colour = ["#fff", "#232931", "#a2aab0"];
+var box_colour = ["#444", "#696e76", "white"];
+var valid_move_colour = ["#777", "#9ca1a9", "#cbc5c1"];
+var font_colour = ["black", "white", "black"];
 
 $(function(){
     var socket = io();
@@ -65,6 +65,12 @@ $(function(){
             alert("Not your turn!");
             return;
         }
+    });
+
+    $(".theme_button").click(function(){
+        document.cookie = `theme=${this.value}`;
+        theme = getCookie("theme");
+        display_board(gamestate, p1ID, p2ID, theme);
     });
 
 
@@ -153,6 +159,8 @@ function display_board(gs, player1ID, player2ID, theme){
     console.log(`the theme cookie is ${theme}`);
     $(".wrapper").css("background-color", `${wrapper_colour[Number(theme)]}`);
     $("html").css("background-color", `${background_colour[Number(theme)]}`);
+    $("div").css("color", `${font_colour[Number(theme)]}`);
+    $("input").css("color", `${font_colour[Number(theme)]}`);
     for(let i = 0; i<gs.length; i++){
         for(let j = 0; j<gs[i].length; j++){
             let div_id = i.toString() + "_" + j.toString();
@@ -204,7 +212,4 @@ function getCookie(cookie_name){
       }
       return "";
 }
-
-
-
 //Classes ------------------------------------------------------------------------------------------
