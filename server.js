@@ -198,8 +198,13 @@ io.on("connection", function(socket){
 
     //add the user to the matchmaking queue
     socket.on("random_game_request", function(user_id){
-        match_making_queue.push(user_list[user_id]);
-        console.log(`UID = ${user_id} has been added to the matchmaking queue.`);
+        if(!match_making_queue.includes(user_list[user_id])){
+            match_making_queue.push(user_list[user_id]);
+            console.log(`UID = ${user_id} has been added to the matchmaking queue.`);
+        }else{
+            console.log("user is already in the queue.");
+        }
+        
 
         //check if there is enough people in queue to start up a match
         if(match_making_queue.length >= 2){
