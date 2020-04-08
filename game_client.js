@@ -1,7 +1,33 @@
 //executes when the dom is ready
+var p1_colour = ["red", "#4ecca3", ""];
+var p2_colour = ["blue", "#ee562b", ""];
+var background_colour = ["#fff", "#232931", ""];
+var wrapper_colour = ["#fff", "#232931", ""];
+var box_colour = ["#444", "#696e76", ""];
+var valid_move_colour = ["#777", "#9ca1a9", ""];
+var font_colour = ["black", "white", ""];
+
 $(function(){
     var socket = io();
     let cookies = document.cookie;
+
+    
+
+    //check to see if we have a uid cookie
+    let theme = getCookie("theme");
+    if(theme == ""){
+        console.log("No theme cookie");
+        document.cookie = `theme=0`;
+        theme = getCookie("theme");
+        console.log(`theme = ${theme} is type ${typeof(theme)}`);
+    }else{
+        console.log(`theme Cookie found: ${theme}.`);
+    }
+
+    //checks what theme is saved.
+    $('input:radio[name=theme_group]')[Number(theme)].checked = true;
+
+
 
     //I think this works as a 2d array
     //later on we will recieve gs from server instead of making our own here. 
@@ -24,8 +50,6 @@ $(function(){
     $(".box").click(function(){
         //returns what column was selected.
         let column_choice = this.id.split("_")[1];
-        console.log(`You clicked on ${typeof(column_choice)}.`);
-        console.log(gamestate[0][column_choice]);
         if(gamestate[0][column_choice] === 0){
             console.log("Allowed move.");
         }else{
@@ -67,12 +91,12 @@ $(function(){
     }else{
         $(".player_indicator").text("You are player 2.");
     }
-    display_board(gamestate, p1ID, p2ID);
+    display_board(gamestate, p1ID, p2ID, theme);
 
     socket.on("game_update", function(gid, gs, playerTurn){
         if(gid === game_id){
             gamestate = gs;
-            display_board(gamestate, p1ID, p2ID);
+            display_board(gamestate, p1ID, p2ID, theme);
             console.table(gamestate);
             console.log(playerTurn);
             if(uid === playerTurn){
@@ -87,7 +111,7 @@ $(function(){
     socket.on("game_over", function(gid, winnerID, gs){
         if(gid === game_id){
             gamestate = gs;
-            display_board(gamestate, p1ID, p2ID);
+            display_board(gamestate, p1ID, p2ID, theme);
             if(uid === winnerID){
                 $(".game_over").text("You win!!!");
             }else{
@@ -100,6 +124,10 @@ $(function(){
 });
 
 //Functions ----------------------------------------------------------------------------------------
+
+function setupTheme(theme_id){
+
+}
 
 //takes in a gamestate, the player that made the move, and the requested move
 function add_to_gamestate(gs, player, postition){
@@ -121,19 +149,42 @@ function add_to_gamestate(gs, player, postition){
 }
 
 //this function updates the divs to match the gamestate
-function display_board(gs, player1ID, player2ID){
+function display_board(gs, player1ID, player2ID, theme){
+    console.log(`the theme cookie is ${theme}`);
+    $(".wrapper").css("background-color", `${wrapper_colour[Number(theme)]}`);
+    $("html").css("background-color", `${background_colour[Number(theme)]}`);
     for(let i = 0; i<gs.length; i++){
         for(let j = 0; j<gs[i].length; j++){
             let div_id = i.toString() + "_" + j.toString();
             if(gs[i][j] === player1ID){
-                $(`#${div_id}`).css("background-color","red");
+                $(`#${div_id}`).css("background-color", `${p1_colour[Number(theme)]}`);
             }else if(gs[i][j] === player2ID){
-                $(`#${div_id}`).css("background-color","blue");
+                $(`#${div_id}`).css("background-color",`${p2_colour[Number(theme)]}`);
             }else if(i === 0 && gs[i][j] === 0){
-                $(`#${div_id}`).css("background-color","#777");
+                $(`#${div_id}`).css("background-color",`${valid_move_colour[Number(theme)]}`);
+            }else{
+                $(`#${div_id}`).css("background-color",`${box_colour[Number(theme)]}`);
             }
         }
     }
+}
+
+//returns the value of a cookie
+function getCookie(cookie_name){
+    let name = cookie_name + "=";
+    let cookies = document.cookie;
+    let split_cookies = cookies.split(";");
+
+    for(let i = 0; i <split_cookies.length; i++) {
+        var c = split_cookies[i];
+        while (c.charAt(0) == ' ') {
+          c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+          return c.substring(name.length, c.length);
+        }
+      }
+      return "";
 }
 
 //returns the value of a cookie
