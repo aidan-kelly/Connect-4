@@ -164,7 +164,7 @@ io.on("connection", function(socket){
             user_list[user_id].userNickname = requested_nickname;
             console.log(`UID = ${user_id} changed their nickname to ${requested_nickname}.`);
         }else{
-            console.log("Error");
+            socket.emit("my_error", "That nickname is already taken.", "#username_change_error");
         }
     });
 
@@ -188,10 +188,10 @@ io.on("connection", function(socket){
                     io.emit("game_start", game_list[requested_gid].gameID, game_list[requested_gid].player1ID, game_list[requested_gid].player2ID, game_list[requested_gid].playerTurn);
                 }
             }else{
-                console.log("Error");
+                socket.emit("my_error", "Game is full.", "#game_is_full");
             }
         }else{
-            console.log("Error");
+            socket.emit("my_error", "The game does not exist.", "#game_does_not_exist");
         }
     });
 
@@ -202,7 +202,7 @@ io.on("connection", function(socket){
             match_making_queue.push(user_list[user_id]);
             console.log(`UID = ${user_id} has been added to the matchmaking queue.`);
         }else{
-            console.log("user is already in the queue.");
+            socket.emit("my_error", "You are already in the matchmaking queue.", "#user_already_in_queue");
         }
         
 

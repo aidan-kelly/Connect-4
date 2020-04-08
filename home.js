@@ -35,6 +35,15 @@ $(function(){
         socket.emit("username_change_request", uid, $("#username_entry").val());
     });
 
+    $("#username_input").keydown(function(input_field){
+        $("#username_change_error").text("");
+    });
+
+    $("#gid_input").keydown(function(input_field){
+        $("#game_does_not_exist").text("");
+        $("#game_is_full").text("");
+    });
+
 
     //will send the gid to server and attempt to start the game. 
     $("#gid_input").submit(function(input_field){
@@ -52,6 +61,10 @@ $(function(){
             window.localStorage.setItem("player_turn", player_turn);
             window.location.replace('http://localhost:3000/game_board.html');
         }
+    });
+
+    socket.on("my_error", function(error_text, error_css_id){
+        $(error_css_id).text(error_text);
     });
 });
 

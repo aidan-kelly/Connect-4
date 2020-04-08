@@ -20,6 +20,7 @@
                     <form action="" id="username_input">
                         <input id="username_entry" autocomplete="off"/>
                     </form>
+                    <div id="username_change_error" class="error"></div>
                     <div>You can change this nickname.</div>
                 </div>
             </div>
@@ -41,6 +42,8 @@
                     <form action="" id="gid_input">
                         <input id="gid_entry" autocomplete="off" placeholder="Game ID goes here."/>
                     </form>
+                    <div id="game_does_not_exist" class="error"></div>
+                    <div id="game_is_full" class="error"></div>
                 </div>
             </div>
 
@@ -49,6 +52,7 @@
                 <div class="section">
                     <div class="inbox">To join a random game, click the button below.</div>
                     <button id="random_button">Random</button>
+                    <div id="user_already_in_queue" class="error"></div>
                 </div>
             </div>
         </div>
