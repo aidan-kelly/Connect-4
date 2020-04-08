@@ -13,7 +13,6 @@ $(function(){
 
     
 
-    //check to see if we have a uid cookie
     let theme = getCookie("theme");
     if(theme == ""){
         console.log("No theme cookie");
@@ -46,7 +45,12 @@ $(function(){
     let game_id = window.localStorage.getItem("game_ID");
     let p1ID = window.localStorage.getItem("player1_ID");
     let p2ID = window.localStorage.getItem("player2_ID");
+    let p1_username = window.localStorage.getItem("player1_username");
+    let p2_username = window.localStorage.getItem("player2_username");
+    let opponenet_username = "";
+    let player_username = "";
     
+
     $(".box").click(function(){
         //returns what column was selected.
         let column_choice = this.id.split("_")[1];
@@ -84,19 +88,22 @@ $(function(){
         console.log(`UID Cookie found: ${uid}.`);
     }
 
+    if(uid === p1ID){
+        opponenet_username = p2_username;
+        player_username = p1_username;
+    }else{
+        opponenet_username = p1_username;
+        player_username = p2_username;
+    }
+    
     if(uid === window.localStorage.getItem("player_turn")){
         turn = 1;
-        $(".turn_indicator").text("It's your turn.");
+        $(".turn_indicator").text(`It's your turn ${player_username}.`);
     }else{
         turn = 0;
-        $(".turn_indicator").text("Waiting on opponent to make a move.");
+        $(".turn_indicator").text(`Waiting on ${opponenet_username} to make a move.`);
     }
-
-    if(p1ID === uid){
-        $(".player_indicator").text("You are player 1.");
-    }else{
-        $(".player_indicator").text("You are player 2.");
-    }
+    
     display_board(gamestate, p1ID, p2ID, theme);
 
     socket.on("game_update", function(gid, gs, playerTurn){
@@ -107,9 +114,9 @@ $(function(){
             console.log(playerTurn);
             if(uid === playerTurn){
                 turn = 1;
-                $(".turn_indicator").text("It's your turn.");
+                $(".turn_indicator").text(`It's your turn ${player_username}.`);
             }else{
-                $(".turn_indicator").text("Waiting on opponent to make a move.");
+                $(".turn_indicator").text(`Waiting on ${opponenet_username} to make a move.`);
             }
         } 
     });

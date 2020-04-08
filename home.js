@@ -52,13 +52,15 @@ $(function(){
         socket.emit("game_join_request", uid, $("#gid_entry").val());
     });
 
-    socket.on("game_start", function(game_ID, player1_ID, player2_ID, player_turn){
+    socket.on("game_start", function(game_ID, player1_ID, player2_ID, player_turn, player1_username, player2_username){
         //moves us to a new page...........................
         if(uid === player1_ID || uid === player2_ID){
             window.localStorage.setItem("game_ID", game_ID);
             window.localStorage.setItem("player1_ID", player1_ID);
             window.localStorage.setItem("player2_ID", player2_ID);
             window.localStorage.setItem("player_turn", player_turn);
+            window.localStorage.setItem("player1_username", player1_username);
+            window.localStorage.setItem("player2_username", player2_username);
             window.location.replace('http://localhost:3000/game_board.html');
         }
     });

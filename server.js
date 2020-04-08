@@ -181,11 +181,11 @@ io.on("connection", function(socket){
                 if(requested_game.player1ID === undefined){
                     game_list[requested_gid].player1ID = user_id;
                     //start the game by sending out a game_start message
-                    io.emit("game_start", game_list[requested_gid].gameID, game_list[requested_gid].player1ID, game_list[requested_gid].player2ID, game_list[requested_gid].playerTurn);
+                    io.emit("game_start", game_list[requested_gid].gameID, game_list[requested_gid].player1ID, game_list[requested_gid].player2ID, game_list[requested_gid].playerTurn, user_list[game_list[requested_gid].player1ID].userNickname, user_list[game_list[requested_gid].playerID].userNickname);
                 }else{
                     game_list[requested_gid].player2ID = user_id;
                     //start the game by sending out a game_start message
-                    io.emit("game_start", game_list[requested_gid].gameID, game_list[requested_gid].player1ID, game_list[requested_gid].player2ID, game_list[requested_gid].playerTurn);
+                    io.emit("game_start", game_list[requested_gid].gameID, game_list[requested_gid].player1ID, game_list[requested_gid].player2ID, game_list[requested_gid].playerTurn, user_list[game_list[requested_gid].player1ID].userNickname, user_list[game_list[requested_gid].playerID].userNickname);
                 }
             }else{
                 socket.emit("my_error", "Game is full.", "#game_is_full");
@@ -217,7 +217,7 @@ io.on("connection", function(socket){
 
             //game_start message. 
             //gameID, gamestate, player1ID, player2ID, firstPlayerID
-            io.emit("game_start", new_game.gameID, new_game.player1ID, new_game.player2ID, new_game.playerTurn);
+            io.emit("game_start", new_game.gameID, new_game.player1ID, new_game.player2ID, new_game.playerTurn, user_list[new_game.player1ID].userNickname, user_list[new_game.player2ID].userNickname);
         }
 
     });
