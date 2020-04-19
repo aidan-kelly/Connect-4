@@ -103,7 +103,7 @@ $(function(){
         turn = 0;
         $(".turn_indicator").text(`Waiting on ${opponenet_username} to make a move.`);
     }
-    
+
     display_board(gamestate, p1ID, p2ID, theme);
 
     socket.on("game_update", function(gid, gs, playerTurn){
@@ -138,10 +138,6 @@ $(function(){
 
 //Functions ----------------------------------------------------------------------------------------
 
-function setupTheme(theme_id){
-
-}
-
 //takes in a gamestate, the player that made the move, and the requested move
 function add_to_gamestate(gs, player, postition){
     //check if the move is valid
@@ -173,12 +169,16 @@ function display_board(gs, player1ID, player2ID, theme){
             let div_id = i.toString() + "_" + j.toString();
             if(gs[i][j] === player1ID){
                 $(`#${div_id}`).css("background-color", `${p1_colour[Number(theme)]}`);
+                $(`#${div_id}`).css("border", `2px solid ${font_colour[Number(theme)]}`);
             }else if(gs[i][j] === player2ID){
                 $(`#${div_id}`).css("background-color",`${p2_colour[Number(theme)]}`);
+                $(`#${div_id}`).css("border", `2px solid ${font_colour[Number(theme)]}`);
             }else if(i === 0 && gs[i][j] === 0){
                 $(`#${div_id}`).css("background-color",`${valid_move_colour[Number(theme)]}`);
+                $(`#${div_id}`).css("border", `2px solid ${font_colour[Number(theme)]}`);
             }else{
                 $(`#${div_id}`).css("background-color",`${box_colour[Number(theme)]}`);
+                $(`#${div_id}`).css("border", `2px solid ${font_colour[Number(theme)]}`);
             }
         }
     }
@@ -219,4 +219,3 @@ function getCookie(cookie_name){
       }
       return "";
 }
-//Classes ------------------------------------------------------------------------------------------

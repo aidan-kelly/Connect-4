@@ -8,7 +8,7 @@ var io = require('socket.io')(http);
 var port = 3000;
 let user_list = new Object();
 var game_list = new Object();
-let match_making_queue = [];
+var match_making_queue = [];
 
 var COLUMN_COUNT = 7;
 var ROW_COUNT = 6;
@@ -52,7 +52,6 @@ app.get('/game_client.js', function(req, res) {
 
 //a new connection from a socket
 io.on("connection", function(socket){
-    console.log("User connected!");
     let new_user = new User();
     let new_custom_game = new Game();
     new_custom_game.gameID = generate_game_id();
@@ -76,10 +75,24 @@ io.on("connection", function(socket){
             //mark user as online and update online user list
             user_list[uid].status = true;
             console.log(`A user reconnected. ID = ${user_list[uid].userNickname}.`);
-            new_custom_game.player1ID = new_user.userID;
-            new_custom_game.playerTurn = new_user.userID;
-            game_list[new_custom_game.gameID] = new_custom_game;
-            socket.emit("setup_ui", new_user.userNickname, "Welcome back", new_custom_game.gameID);
+            let game_id = new_custom_game.gameID;
+
+            for(let key in game_list){
+                if(game_list[key].player1ID === new_user.userID && game_list[key].player2ID === undefined){
+                    game_id = key;
+                }
+            }
+
+            if(game_id !== new_custom_game.gameID){
+                socket.emit("setup_ui", new_user.userNickname, "Welcome back", game_id);
+            }else{
+                new_custom_game.player1ID = new_user.userID;
+                new_custom_game.playerTurn = new_user.userID;
+                game_list[new_custom_game.gameID] = new_custom_game;
+                socket.emit("setup_ui", new_user.userNickname, "Welcome back", new_custom_game.gameID);
+            }
+            
+            
 
         //a new user
         }else{
@@ -92,29 +105,6 @@ io.on("connection", function(socket){
             game_list[new_custom_game.gameID] = new_custom_game;
             socket.emit("setup_ui", new_user.userNickname, "We created a nickname for you", new_custom_game.gameID);
         }
-
-        //check if we can start a game.
-        // match_making_queue.push(new_user);
-        // if(match_making_queue.length >= 2){
-        //     let p1 = match_making_queue.shift();
-        //     let p2 = match_making_queue.shift();
-        //     console.log(`We can start a match with ${p1.userNickname} and ${p2.userNickname}.`)
-        //     let new_game = new Game(generate_game_id(), p1.userID, p2.userID);
-        //     game_list[new_game.gameID] = new_game;
-        //     console.log(game_list);
-        //     console.log(user_list);
-
-        //     //game_start message. 
-        //     //gameID, gamestate, player1ID, player2ID, firstPlayerID
-        //     io.emit("game_start", new_game.gameID, new_game.gamestate, new_game.player1ID, new_game.player2ID, new_game.playerTurn);
-
-            
-        // }
-
-        console.table(game_list);
-
-        
-
     });
 
     socket.on("disconnect", function(){
@@ -124,14 +114,7 @@ io.on("connection", function(socket){
         //NEED TO REMOVE USER FROM THE GAME QUEUE
         try{
             user_list[new_user.userID].status = false;
-
-            //when a user disconnects we remove their games. 
-            // for(let key in game_list){
-            //     if(game_list[key].player1ID === new_user.userID || game_list[key].player2ID === new_user.userID){
-            //         delete game_list[key];
-            //     }
-            // }
-
+            match_making_queue = remove_from_queue(new_user.userID, new_user.userID);
         }catch(err){
             console.log("Weird error from last assignment lol.")
         }
@@ -139,8 +122,6 @@ io.on("connection", function(socket){
 
     socket.on("game_move", function(game_id, playerID, move){
         let game = game_list[game_id];
-        console.table(game_list);
-        console.log(game);
         add_to_gamestate(game.gamestate, playerID, move);
         if(check_for_winning_move(game.gamestate, playerID)){
             io.emit("game_over", game_id, playerID, game.gamestate);
@@ -173,19 +154,19 @@ io.on("connection", function(socket){
     socket.on("game_join_request", function(user_id, requested_gid){
         let requested_game = game_list[requested_gid];
         if(requested_game !== undefined){
-            console.log("The game exists.");
             if((requested_game.player1ID === undefined && (requested_game.player2ID !== undefined && requested_game.player2ID !== user_id)) || ((requested_game.player1ID !== undefined && requested_game.player1ID !== user_id) && requested_game.player2ID === undefined)){
-                console.log("We can join.");
-
+                
                 //add the user to the game.
                 if(requested_game.player1ID === undefined){
                     game_list[requested_gid].player1ID = user_id;
                     //start the game by sending out a game_start message
-                    io.emit("game_start", game_list[requested_gid].gameID, game_list[requested_gid].player1ID, game_list[requested_gid].player2ID, game_list[requested_gid].playerTurn, user_list[game_list[requested_gid].player1ID].userNickname, user_list[game_list[requested_gid].playerID].userNickname);
+                    io.emit("game_start", game_list[requested_gid].gameID, game_list[requested_gid].player1ID, game_list[requested_gid].player2ID, game_list[requested_gid].playerTurn, user_list[game_list[requested_gid].player1ID].userNickname, user_list[game_list[requested_gid].player2ID].userNickname);
+                    match_making_queue = remove_from_queue(game_list[requested_gid].player1ID, game_list[requested_gid].player2ID);
                 }else{
                     game_list[requested_gid].player2ID = user_id;
                     //start the game by sending out a game_start message
-                    io.emit("game_start", game_list[requested_gid].gameID, game_list[requested_gid].player1ID, game_list[requested_gid].player2ID, game_list[requested_gid].playerTurn, user_list[game_list[requested_gid].player1ID].userNickname, user_list[game_list[requested_gid].playerID].userNickname);
+                    io.emit("game_start", game_list[requested_gid].gameID, game_list[requested_gid].player1ID, game_list[requested_gid].player2ID, game_list[requested_gid].playerTurn, user_list[game_list[requested_gid].player1ID].userNickname, user_list[game_list[requested_gid].player2ID].userNickname);
+                    match_making_queue = remove_from_queue(game_list[requested_gid].player1ID, game_list[requested_gid].player2ID);
                 }
             }else{
                 socket.emit("my_error", "Game is full.", "#game_is_full");
@@ -213,7 +194,6 @@ io.on("connection", function(socket){
             console.log(`We can start a match with ${p1.userNickname} and ${p2.userNickname}.`);
             let new_game = new Game(generate_game_id(), p1.userID, p2.userID);
             game_list[new_game.gameID] = new_game;
-            console.table(game_list);
 
             //game_start message. 
             //gameID, gamestate, player1ID, player2ID, firstPlayerID
@@ -266,7 +246,6 @@ function add_to_gamestate(gs, player, postition){
             //if that position is empty, piece would fall there
             if(gs[i][postition] === 0){
                 gs[i][postition] = player;
-                console.table(gs);
                 return gs;
             }
         }
@@ -275,6 +254,18 @@ function add_to_gamestate(gs, player, postition){
     }else{
         return gs;
     }
+}
+
+function remove_from_queue(p1_id, p2_id){
+    let new_array = [];
+    for(let i = 0; i<match_making_queue.length; i++){
+        if(match_making_queue[i].userID === p1_id || match_making_queue[i].userID === p2_id){
+            console.log(match_making_queue[i].userID + " was caught.");
+        }else{
+            new_array.push(match_making_queue[i]);
+        }
+    }
+    return new_array;
 }
 
 
