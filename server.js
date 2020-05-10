@@ -5,7 +5,7 @@ app.use(cookieParser());
 var http = require('http').createServer(app);
 var io = require('socket.io')(http);
 
-var port = 3000;
+var port = process.env.PORT;
 let user_list = new Object();
 var game_list = new Object();
 var match_making_queue = [];
