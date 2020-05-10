@@ -61,7 +61,7 @@ $(function(){
             window.localStorage.setItem("player_turn", player_turn);
             window.localStorage.setItem("player1_username", player1_username);
             window.localStorage.setItem("player2_username", player2_username);
-            window.location.replace('http://localhost:3000/game_board.html');
+            window.location.replace("https://connect-4-aidan.herokuapp.com/game_board.html");
         }
     });
 
